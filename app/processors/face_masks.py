@@ -1,3 +1,7 @@
+import gc
+import torch
+import gc
+import torch
 from typing import TYPE_CHECKING
 
 import torch
@@ -116,6 +120,8 @@ class FaceMasks:
         elif self.models_processor.device != "cpu":
             self.models_processor.syncvec.cpu()
         self.models_processor.models['XSeg'].run_with_iobinding(io_binding)
+        gc.collect(); torch.cuda.empty_cache()
+        gc.collect(); torch.cuda.empty_cache()
         
     def apply_face_parser(self, img, parameters):
         # atts = [1 'skin', 2 'l_brow', 3 'r_brow', 4 'l_eye', 5 'r_eye', 6 'eye_g', 7 'l_ear', 8 'r_ear', 9 'ear_r', 10 'nose', 11 'mouth', 12 'u_lip', 13 'l_lip', 14 'neck', 15 'neck_l', 16 'cloth', 17 'hair', 18 'hat']

@@ -147,6 +147,7 @@ class InputFacesLoaderWorker(qtc.QThread):
     def run(self):
         if self.folder_name or self.files_list:
             self.main_window.placeholder_update_signal.emit(self.main_window.inputFacesList, True)
+            import torch; import gc; gc.collect(); torch.cuda.empty_cache()
             self.load_faces(self.folder_name, self.files_list)
             self.main_window.placeholder_update_signal.emit(self.main_window.inputFacesList, False)
 

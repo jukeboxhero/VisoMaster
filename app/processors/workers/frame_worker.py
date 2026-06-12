@@ -1,3 +1,5 @@
+import gc
+import torch
 import traceback
 from typing import TYPE_CHECKING
 import threading
@@ -202,6 +204,7 @@ class FrameWorker(threading.Thread):
         img = img.permute(1,2,0)
         img = img.cpu().numpy()
         # RGB to BGR
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img[..., ::-1]
     
     def keypoints_adjustments(self, kps_5: np.ndarray, parameters: dict) -> np.ndarray:
@@ -259,6 +262,7 @@ class FrameWorker(threading.Thread):
                                 except ValueError:
                                     #print("Key-points value {} exceed the image size {}.".format(kpoint, (img_x, img_y)))
                                     continue
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img
     
     def draw_bounding_boxes_on_detected_faces(self, img: torch.Tensor, det_faces_data: list, control: dict):
@@ -283,6 +287,7 @@ class FrameWorker(threading.Thread):
             img[:, y_min:y_max + 1, x_min:x_min + thickness] = color_tensor.expand(-1, y_max - y_min + 1, thickness)
             # Draw the right edge
             img[:, y_min:y_max + 1, x_max - thickness + 1:x_max + 1] = color_tensor.expand(-1, y_max - y_min + 1, thickness)   
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img
 
     def get_compare_faces_image(self, img: torch.Tensor, det_faces_data: dict, control: dict) -> torch.Tensor:
@@ -338,6 +343,7 @@ class FrameWorker(threading.Thread):
             # Stack images vertically
             img_vstack = torch.cat(padded_imgs, dim=1)  # Use dim=1 for vertical stacking
             img = img_vstack
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img
         
     def get_cropped_face_using_kps(self, img: torch.Tensor, kps_5: np.ndarray, parameters: dict) -> torch.Tensor:
@@ -825,6 +831,7 @@ class FrameWorker(threading.Thread):
         img[0:3, top:bottom, left:right] = swap
 
 
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img, original_face_512_clone, swap_mask_clone
 
     def enhance_core(self, img, control):
@@ -977,6 +984,7 @@ class FrameWorker(threading.Thread):
                 # Converti in uint8
                 img = blended_img.type(torch.uint8)
 
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img
 
     def apply_face_expression_restorer(self, driving, target, parameters):
@@ -1309,4 +1317,5 @@ class FrameWorker(threading.Thread):
                 mask_crop = gauss(self.models_processor.lp_mask_crop)
                 img = faceutil.paste_back_adv(out, M_c2o, img, mask_crop)
 
+        torch.cuda.synchronize(); gc.collect(); torch.cuda.empty_cache()
         return img
